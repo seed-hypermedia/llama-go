@@ -173,6 +173,11 @@ ifeq ($(BUILD_TYPE),metal)
 	EXTRA_TARGETS+=llama.cpp/ggml-metal.o
 endif
 
+ifeq ($(BUILD_TYPE),vulkan)
+	EXTRA_LIBS=
+	CMAKE_ARGS+=-DGGML_VULKAN=ON
+endif
+
 ifdef CLBLAST_DIR
 	CMAKE_ARGS+=-DCLBlast_dir=$(CLBLAST_DIR)
 endif
@@ -253,6 +258,12 @@ ifneq (,$(findstring -DBUILD_SHARED_LIBS=OFF,$(CMAKE_ARGS)))
 	cp build/ggml/src/libggml.a .
 	cp build/ggml/src/libggml-base.a .
 	cp build/ggml/src/libggml-cpu.a .
+ifeq ($(BUILD_TYPE),openblas)
+	cp build/ggml/src/ggml-blas/libggml-blas.a .
+endif
+ifeq ($(BUILD_TYPE),vulkan)
+	cp build/ggml/src/ggml-vulkan/libggml-vulkan.a .
+endif
 else
 	@echo "Copying shared libraries..."
 	cp build/bin/libllama.so .
@@ -261,6 +272,12 @@ else
 	cp build/bin/libggml-cpu.so .
 ifeq ($(BUILD_TYPE),cublas)
 	cp build/bin/libggml-cuda.so .
+endif
+ifeq ($(BUILD_TYPE),openblas)
+	cp build/bin/libggml-blas.so .
+endif
+ifeq ($(BUILD_TYPE),vulkan)
+	cp build/bin/libggml-vulkan.so .
 endif
 endif
 

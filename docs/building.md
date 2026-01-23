@@ -51,11 +51,23 @@ docker run --rm -v $(pwd):/workspace -w /workspace ubuntu:24.04 \
 For local builds, ensure you have CMake installed:
 
 ```bash
-# Install dependencies (Ubuntu/Debian)
+# Install base dependencies (Ubuntu/Debian)
 sudo apt-get install build-essential cmake
 
-# Build the library
+# For Vulkan GPU acceleration, also install:
+sudo apt-get install vulkan-headers vulkan-loader-dev glslc
+
+# Install base dependencies (Fedora/RHEL)
+sudo dnf install gcc-c++ cmake
+
+# For Vulkan GPU acceleration, also install:
+sudo dnf install vulkan-headers vulkan-loader-devel glslc
+
+# Build the CPU-only library (dynamic)
 make libbinding.a
+
+# Build with Vulkan GPU acceleration (static)
+BUILD_TYPE=vulkan CMAKE_ARGS="-DBUILD_SHARED_LIBS=OFF" make libbinding.a
 ```
 
 ## Build output
@@ -103,6 +115,10 @@ as separate `.so` files.
 
 Build llama.cpp as static libraries to create a single self-contained binary. Modify the CMake
 build to pass `-DBUILD_SHARED_LIBS=OFF` in the Makefile.
+```bash
+# Build the static library
+CMAKE_ARGS="-DBUILD_SHARED_LIBS=OFF" make libbinding.a
+```
 
 **When to use:**
 
@@ -185,7 +201,7 @@ defer ctx.Close()
 | RPC | `BUILD_TYPE=rpc make libbinding.a` | `-lpthread` | Distributed inference across machines |
 | ROCm | `BUILD_TYPE=hipblas make libbinding.a` | `-O3 --hip-link --rtlib=compiler-rt -unwindlib=libgcc -lrocblas -lhipblas` | AMD GPUs, requires ROCm compilers |
 | SYCL | `BUILD_TYPE=sycl make libbinding.a` | `-lsycl -L/opt/intel/oneapi/compiler/latest/linux/lib` | Intel Arc/Xe GPUs, optional NVIDIA/AMD |
-| Vulkan | `BUILD_TYPE=vulkan make libbinding.a` | `-lvulkan -L/usr/lib/x86_64-linux-gnu` | Cross-platform GPU (NVIDIA, AMD, Intel, ARM) |
+| Vulkan | `BUILD_TYPE=vulkan make libbinding.a` | `-lggml-vulkan -lvulkan` | Cross-platform GPU (NVIDIA, AMD, Intel, ARM), requires vulkan-headers, vulkan-loader-devel, glslc |
 
 ### CUDA acceleration example
 
@@ -218,6 +234,28 @@ docker run --rm -v $(pwd):/workspace -w /workspace git.tomfos.tr/tom/llama-go:bu
   bash -c "CGO_LDFLAGS='-lopenblas' \
            LIBRARY_PATH=/workspace C_INCLUDE_PATH=/workspace LD_LIBRARY_PATH=/workspace \
            go run ./examples -m /path/to/model.gguf -p 'Hello world' -n 50"
+```
+
+### Vulkan acceleration example
+
+For cross-platform GPU support (NVIDIA, AMD, Intel):
+
+```bash
+# Install Vulkan development dependencies (Ubuntu/Debian)
+sudo apt-get install vulkan-headers vulkan-loader-dev glslc
+
+# Install Vulkan development dependencies (Fedora/RHEL)
+sudo dnf install vulkan-headers vulkan-loader-devel glslc
+
+# Build with Vulkan (static)
+BUILD_TYPE=vulkan CMAKE_ARGS="-DBUILD_SHARED_LIBS=OFF" make libbinding.a
+
+# Build Go application
+LIBRARY_PATH=$PWD C_INCLUDE_PATH=$PWD CGO_LDFLAGS='-lggml-vulkan -lvulkan' \
+  go build -o myapp ./examples/simple
+
+# Run (requires GPU drivers with Vulkan support)
+./myapp -m /path/to/model.gguf -p "Hello world" -n 50
 ```
 
 ### Metal acceleration (Apple Silicon)
@@ -286,6 +324,13 @@ git submodule update --init --recursive
 
 - Verify the build completed successfully without errors
 - Check that CMake found all required dependencies
+
+### Vulkan build fails with "Could NOT find Vulkan"
+
+- Install Vulkan development packages:
+  - Ubuntu/Debian: `sudo apt-get install vulkan-headers vulkan-loader-dev glslc`
+  - Fedora/RHEL: `sudo dnf install vulkan-headers vulkan-loader-devel glslc`
+- Ensure all three packages are installed (headers, loader-dev, and glslc)
 
 ### Cross-compilation issues
 
