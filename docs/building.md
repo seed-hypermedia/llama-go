@@ -54,13 +54,13 @@ For local builds, ensure you have CMake installed:
 # Install base dependencies (Ubuntu/Debian)
 sudo apt-get install build-essential cmake
 
-# For Vulkan GPU acceleration, also install:
-sudo apt-get install vulkan-headers vulkan-loader-dev glslc
+# For Vulkan GPU acceleration, also install (Ubuntu/Debian):
+sudo apt-get install libvulkan-dev glslc
 
 # Install base dependencies (Fedora/RHEL)
 sudo dnf install gcc-c++ cmake
 
-# For Vulkan GPU acceleration, also install:
+# For Vulkan GPU acceleration, also install (Fedora/RHEL):
 sudo dnf install vulkan-headers vulkan-loader-devel glslc
 
 # Build the CPU-only library (dynamic)
@@ -201,7 +201,7 @@ defer ctx.Close()
 | RPC | `BUILD_TYPE=rpc make libbinding.a` | `-lpthread` | Distributed inference across machines |
 | ROCm | `BUILD_TYPE=hipblas make libbinding.a` | `-O3 --hip-link --rtlib=compiler-rt -unwindlib=libgcc -lrocblas -lhipblas` | AMD GPUs, requires ROCm compilers |
 | SYCL | `BUILD_TYPE=sycl make libbinding.a` | `-lsycl -L/opt/intel/oneapi/compiler/latest/linux/lib` | Intel Arc/Xe GPUs, optional NVIDIA/AMD |
-| Vulkan | `BUILD_TYPE=vulkan make libbinding.a` | `-lggml-vulkan -lvulkan` | Cross-platform GPU (NVIDIA, AMD, Intel, ARM), requires vulkan-headers, vulkan-loader-devel, glslc |
+| Vulkan | `BUILD_TYPE=vulkan make libbinding.a` | `-lggml-vulkan -lvulkan` | Cross-platform GPU (NVIDIA, AMD, Intel, ARM), requires vulkan [libraries](#vulkan-acceleration-example)  |
 
 ### CUDA acceleration example
 
@@ -242,7 +242,7 @@ For cross-platform GPU support (NVIDIA, AMD, Intel):
 
 ```bash
 # Install Vulkan development dependencies (Ubuntu/Debian)
-sudo apt-get install vulkan-headers vulkan-loader-dev glslc
+sudo apt-get install libvulkan-dev glslc
 
 # Install Vulkan development dependencies (Fedora/RHEL)
 sudo dnf install vulkan-headers vulkan-loader-devel glslc
@@ -328,7 +328,7 @@ git submodule update --init --recursive
 ### Vulkan build fails with "Could NOT find Vulkan"
 
 - Install Vulkan development packages:
-  - Ubuntu/Debian: `sudo apt-get install vulkan-headers vulkan-loader-dev glslc`
+  - Ubuntu/Debian: `sudo apt-get install libvulkan-dev glslc`
   - Fedora/RHEL: `sudo dnf install vulkan-headers vulkan-loader-devel glslc`
 - Ensure all three packages are installed (headers, loader-dev, and glslc)
 
