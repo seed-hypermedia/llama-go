@@ -10,7 +10,12 @@ import (
 /*
 #cgo CFLAGS: -I./llama.cpp -I./ -I./llama.cpp/ggml/include -I./llama.cpp/include -I./llama.cpp/common -I./llama.cpp/vendor
 #cgo CPPFLAGS: -I./llama.cpp -I./ -I./llama.cpp/ggml/include -I./llama.cpp/include -I./llama.cpp/common -I./llama.cpp/vendor
-#cgo LDFLAGS: -L./ -lbinding -lcommon -lllama -lggml -lggml-cpu -lggml-base -lstdc++ -lm -lgomp
+#cgo CXXFLAGS: -std=c++17 -I./llama.cpp -I./ -I./llama.cpp/ggml/include -I./llama.cpp/include -I./llama.cpp/common -I./llama.cpp/vendor
+#cgo darwin CXXFLAGS: -stdlib=libc++
+#cgo !windows LDFLAGS: -L./ -lbinding -lcommon -lllama -lggml -lggml-cpu -lggml-base -lstdc++ -lm
+#cgo windows LDFLAGS: -L./ -lcommon -lllama -lggml -lggml-cpu -lggml-base -lm
+#cgo linux LDFLAGS: -lgomp
+#cgo darwin LDFLAGS: -framework Accelerate -stdlib=libc++
 #include "wrapper.h"
 #include <stdlib.h>
 
@@ -154,6 +159,7 @@ func LoadModel(path string, opts ...ModelOption) (*Model, error) {
 
 	// Configure progress callback if requested
 	var callbackID uintptr
+	var idPtr *uintptr
 	if config.progressCallback != nil {
 		progressCallbackMutex.Lock()
 		progressCallbackCounter++
@@ -164,13 +170,18 @@ func LoadModel(path string, opts ...ModelOption) (*Model, error) {
 
 		// Set C callback (using helper function to get the function pointer)
 		params.progress_callback = C.get_go_progress_callback()
-		params.progress_callback_user_data = unsafe.Pointer(callbackID)
+		// Allocate the ID on the heap so the pointer is valid for checkptr.
+		// The C side passes this back as-is; we dereference in goProgressCallback.
+		idPtr = new(uintptr)
+		*idPtr = callbackID
+		params.progress_callback_user_data = unsafe.Pointer(idPtr)
 	} else if config.disableProgressCallback {
 		params.disable_progress_callback = C.bool(true)
 	}
 
 	// Load model (weights only)
 	modelPtr := C.llama_wrapper_model_load(cPath, params)
+	runtime.KeepAlive(idPtr)
 	if modelPtr == nil {
 		// Clean up callback registry on failure
 		if callbackID != 0 {

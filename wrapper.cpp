@@ -284,10 +284,6 @@ char* llama_wrapper_generate_with_tokens(void* ctx, const int* tokens, int n_tok
     }
 
     auto wrapper = static_cast<llama_wrapper_context_t*>(ctx);
-    if (!wrapper->ctx) {
-        g_last_error = "Context has been freed";
-        return nullptr;
-    }
 
     try {
         // Convert C tokens to vector
@@ -584,10 +580,6 @@ char* llama_wrapper_generate(void* ctx, llama_wrapper_generate_params params) {
     }
 
     auto wrapper = static_cast<llama_wrapper_context_t*>(ctx);
-    if (!wrapper->ctx) {
-        g_last_error = "Context has been freed";
-        return nullptr;
-    }
 
     try {
         // Tokenise the prompt
@@ -630,14 +622,6 @@ char* llama_wrapper_generate_draft_with_tokens(void* ctx_target, void* ctx_draft
 
     auto wrapper_tgt = static_cast<llama_wrapper_context_t*>(ctx_target);
     auto wrapper_dft = static_cast<llama_wrapper_context_t*>(ctx_draft);
-    if (!wrapper_tgt->ctx) {
-        g_last_error = "Target context has been freed";
-        return nullptr;
-    }
-    if (!wrapper_dft->ctx) {
-        g_last_error = "Draft context has been freed";
-        return nullptr;
-    }
 
     try {
         // Clear KV caches from divergence points
@@ -906,14 +890,6 @@ char* llama_wrapper_generate_draft(void* ctx_target, void* ctx_draft, llama_wrap
 
     auto wrapper_tgt = static_cast<llama_wrapper_context_t*>(ctx_target);
     auto wrapper_dft = static_cast<llama_wrapper_context_t*>(ctx_draft);
-    if (!wrapper_tgt->ctx) {
-        g_last_error = "Target context has been freed";
-        return nullptr;
-    }
-    if (!wrapper_dft->ctx) {
-        g_last_error = "Draft context has been freed";
-        return nullptr;
-    }
 
     try {
         // Tokenise the prompt
@@ -1327,7 +1303,7 @@ llama_wrapper_parsed_message* llama_wrapper_parse_reasoning(
 
     try {
         // Configure syntax for parsing
-        common_chat_parser_params syntax;
+        common_chat_syntax syntax;
         syntax.format = static_cast<common_chat_format>(chat_format);
         syntax.reasoning_format = static_cast<common_reasoning_format>(format);
         syntax.reasoning_in_content = false;  // Extract to separate field for streaming

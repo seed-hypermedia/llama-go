@@ -270,7 +270,7 @@ var _ = Describe("LoadModel", func() {
 			Expect(model).NotTo(BeNil())
 			defer model.Close()
 
-			ctx, err := model.NewContext(llama.WithContext(2048), llama.WithEmbeddings())
+			ctx, err := model.NewContext(llama.WithContext(2048))
 			Expect(err).NotTo(HaveOccurred())
 			defer ctx.Close()
 
@@ -293,7 +293,7 @@ var _ = Describe("LoadModel", func() {
 			Expect(model).NotTo(BeNil())
 			defer model.Close()
 
-			ctx, err := model.NewContext(llama.WithContext(2048), llama.WithEmbeddings())
+			ctx, err := model.NewContext(llama.WithContext(2048))
 			Expect(err).NotTo(HaveOccurred())
 			defer ctx.Close()
 

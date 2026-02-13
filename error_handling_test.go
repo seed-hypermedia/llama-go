@@ -620,17 +620,13 @@ var _ = Describe("Embedding Errors", func() {
 			model, err = llama.LoadModel(embModelPath, llama.WithGPULayers(-1))
 			Expect(err).NotTo(HaveOccurred())
 
-			ctx, err = model.NewContext(llama.WithContext(2048), llama.WithEmbeddings())
+			ctx, err = model.NewContext(llama.WithContext(2048))
 			Expect(err).NotTo(HaveOccurred())
 
-			// Empty string may trigger tokenization or embedding retrieval failure
+			// Empty string triggers tokenization failure (returns empty token vector)
 			_, err = ctx.GetEmbeddings("")
 			if err != nil {
-				// Accept either tokenization error or embedding retrieval error
-				Expect(err.Error()).To(Or(
-					ContainSubstring("Failed to tokenize text for embeddings"),
-					ContainSubstring("Failed to get embeddings from context"),
-				))
+				Expect(err.Error()).To(ContainSubstring("Failed to tokenize text for embeddings"))
 			}
 			// Note: Some models may handle empty string gracefully, so error is optional
 		})
@@ -672,7 +668,7 @@ var _ = Describe("Embedding Errors", func() {
 			model, err = llama.LoadModel(embModelPath, llama.WithGPULayers(-1))
 			Expect(err).NotTo(HaveOccurred())
 
-			ctx, err = model.NewContext(llama.WithContext(2048), llama.WithEmbeddings())
+			ctx, err = model.NewContext(llama.WithContext(2048))
 			Expect(err).NotTo(HaveOccurred())
 
 			// Normal embedding generation should not throw exceptions
