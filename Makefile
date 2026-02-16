@@ -217,12 +217,14 @@ llama.cpp/ggml-alloc.o: llama.cpp/ggml.o
 
 llama.cpp/ggml.o:
 	mkdir -p build
-	@# Force reconfigure if CMake cache exists but has different settings
+	@# Force reconfigure if CMake cache exists but has different GPU settings
 	@if [ -f build/CMakeCache.txt ]; then \
 		cache_vulkan=$$(grep -q "GGML_VULKAN:BOOL=ON" build/CMakeCache.txt && echo "ON" || echo "OFF"); \
 		want_vulkan=$$(echo "$(CMAKE_ARGS)" | grep -q "DGGML_VULKAN=ON" && echo "ON" || echo "OFF"); \
-		if [ "$$cache_vulkan" != "$$want_vulkan" ]; then \
-			echo "CMake cache GGML_VULKAN mismatch (cache=$$cache_vulkan, want=$$want_vulkan), forcing reconfigure..."; \
+		cache_metal=$$(grep -q "GGML_METAL:BOOL=ON" build/CMakeCache.txt && echo "ON" || echo "OFF"); \
+		want_metal=$$(echo "$(CMAKE_ARGS)" | grep -q "DGGML_METAL=ON" && echo "ON" || echo "OFF"); \
+		if [ "$$cache_vulkan" != "$$want_vulkan" ] || [ "$$cache_metal" != "$$want_metal" ]; then \
+			echo "CMake cache GPU mismatch (vulkan: cache=$$cache_vulkan want=$$want_vulkan, metal: cache=$$cache_metal want=$$want_metal), forcing reconfigure..."; \
 			rm -rf build; \
 			mkdir -p build; \
 		fi; \
@@ -256,12 +258,14 @@ wrapper.o: llama.cpp/ggml.o
 # All Go bindings are now handled through wrapper.cpp
 
 libbinding.a: llama.cpp/ggml.o wrapper.o $(EXTRA_TARGETS)
-	@# Verify CMake cache matches expected configuration, rebuild if not
+	@# Verify CMake cache matches expected GPU configuration, rebuild if not
 	@if [ -f build/CMakeCache.txt ]; then \
 		cache_vulkan=$$(grep -q "GGML_VULKAN:BOOL=ON" build/CMakeCache.txt && echo "ON" || echo "OFF"); \
 		want_vulkan=$$(echo "$(CMAKE_ARGS)" | grep -q "DGGML_VULKAN=ON" && echo "ON" || echo "OFF"); \
-		if [ "$$cache_vulkan" != "$$want_vulkan" ]; then \
-			echo "CMake cache GGML_VULKAN mismatch (cache=$$cache_vulkan, want=$$want_vulkan), forcing full rebuild..."; \
+		cache_metal=$$(grep -q "GGML_METAL:BOOL=ON" build/CMakeCache.txt && echo "ON" || echo "OFF"); \
+		want_metal=$$(echo "$(CMAKE_ARGS)" | grep -q "DGGML_METAL=ON" && echo "ON" || echo "OFF"); \
+		if [ "$$cache_vulkan" != "$$want_vulkan" ] || [ "$$cache_metal" != "$$want_metal" ]; then \
+			echo "CMake cache GPU mismatch (vulkan: cache=$$cache_vulkan want=$$want_vulkan, metal: cache=$$cache_metal want=$$want_metal), forcing full rebuild..."; \
 			rm -rf build llama.cpp/*.o *.o; \
 			$(MAKE) llama.cpp/ggml.o; \
 			$(MAKE) wrapper.o; \
