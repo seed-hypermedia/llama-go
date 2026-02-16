@@ -1,11 +1,9 @@
-# build files
-/binding.o
+# build artifacts
+*.o
+*.a
 /build
 /ggml-metal.metal
 prepare
-
-# static libraries
-libbinding*.a
 
 # build output directories
 /build-output
